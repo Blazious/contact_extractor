@@ -1,10 +1,8 @@
-import pytesseract
+import easyocr
 from PIL import Image
 import re
 import pandas as pd
-import easyocr
 import numpy as np
-
 
 # Regex for phone numbers
 phone_pattern = re.compile(r'\+?\d[\d\s\-]{8,15}')
@@ -12,7 +10,7 @@ phone_pattern = re.compile(r'\+?\d[\d\s\-]{8,15}')
 # Setup EasyOCR once
 easyocr_reader = easyocr.Reader(['en'], gpu=False)
 
-def extract_contacts_from_images(images, method="typed"):
+def extract_contacts_from_images(images, method="handwritten"):
     results = []
 
     for uploaded in images:
@@ -23,14 +21,9 @@ def extract_contacts_from_images(images, method="typed"):
             img = uploaded
             name = "unknown.jpg"
 
-        # Choose method
-        if method == "typed":
-            text = pytesseract.image_to_string(img)
-        elif method == "handwritten":
-            ocr_result = easyocr_reader.readtext(np.array(img))
-            text = " ".join([item[1] for item in ocr_result])
-        else:
-            text = ""
+        # Use EasyOCR (for both typed and handwritten to avoid Tesseract)
+        ocr_result = easyocr_reader.readtext(np.array(img))
+        text = " ".join([item[1] for item in ocr_result])
 
         # Extract phone numbers
         numbers = phone_pattern.findall(text)
